@@ -1,3 +1,13 @@
+// Repo github: https://github.com/deeaanghelache/Genetic-Algorithms
+
+/*
+    Andreea Anghelache
+    Grupa 251
+    Tema Algoritmi Genetici
+*/
+
+// Genetic Algorithms
+
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -49,6 +59,7 @@ vector<int> conversieZecimalInBinar(int valoare){
 
     int diferenta = lungimeCromozom - myStack.size();
 
+    // ma asigur ca am un cromozom de size = lungimeCromozom (daca e nevoie, adaug 0-uri in fata)
     while(diferenta > 0){
         myStack.push(0);
         diferenta--;
@@ -156,6 +167,7 @@ vector<double> intervaleDeSelectie(vector<double> probabilitatiSelectie){
     intervaleSelectie.push_back(0);
 
     for(int i = 0; i < probabilitatiSelectie.size(); i++){
+        // elementul curent din intervaleSelectie + elementul de pe pozitia i din probabilitatiSelectie
         intervaleSelectie.push_back(intervaleSelectie[i] + probabilitatiSelectie[i]);
     }
 
@@ -206,9 +218,16 @@ int cautareBinaraInterval(double u, int capatStanga, int capatDreapta, vector<do
     return 0;
 }
 
+// Procesul de selectie
 pair<vector<Individ>, vector<pair<int, double>>> selectieCromozomi(vector<Individ> populatie, const vector<double>& intervaleSelectie){
+    /*
+        - generam un numar aleator u
+        - cautam intervalul [qi, q(i+1)), caruia ii apartine u
+        - selectam cromozomul q(i+1)
+     */
+
     vector<Individ> indiviziSelectati; // u, indexul, individul
-    vector<pair<int, double>> indexU;
+    vector<pair<int, double>> indexIndividSiValoareRandom;
 
     std::random_device rd;
     std::mt19937 mt(rd());
@@ -221,19 +240,25 @@ pair<vector<Individ>, vector<pair<int, double>>> selectieCromozomi(vector<Indivi
         int indexCromozom = cautareBinaraInterval(u, 0, (int)intervaleSelectie.size() - 1, intervaleSelectie);
 //        cout << indexCromozom << " ";
 
-        indiviziSelectati.push_back(populatie[indexCromozom - 1]);
-        indexU.emplace_back(indexCromozom - 1, u);
+        indiviziSelectati.push_back(populatie[indexCromozom - 1]); // vectorul populatie incepe de la 0
+        indexIndividSiValoareRandom.emplace_back(indexCromozom - 1, u);
     }
 
-    return {indiviziSelectati, indexU};
+    return {indiviziSelectati, indexIndividSiValoareRandom};
 }
 
 vector<pair<bool, double>> selectieIncrucisare(const vector<Individ>& indiviziSelectati){
+    /*
+        - generam un numar aleator u pentru fiecare individ
+        - daca u < probabilitatea de recombinare, cromozomul participa la recombinare
+     */
+
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<double> generator(0, 1);
 
-    vector<pair<bool, double>> indivizi;
+    // indivizi[i] - statutul si valoarea u pentru indiviziSelectati[i]
+    vector<pair<bool, double>> indivizi; // returnez un vector de bool (true->se duce la recombinare, false->nu se duce) si double (valoarea u -> retin pentru a o afisa in main)
 
     for(int i = 0; i < indiviziSelectati.size(); i++){
         double u = generator(mt);
@@ -275,7 +300,7 @@ vector<pair<int, Individ>> recombinare(vector<pair<int, Individ>> indiviziRecomb
     std::uniform_int_distribution<> generator(0, lungimeCromozom - 1);
 
     for(int i = 0; i < indiviziRecombinare.size(); i = i + 2){
-        if(i < indiviziRecombinare.size() && i + 1 < indiviziRecombinare.size()){
+        if(i < indiviziRecombinare.size() && (i + 1) < indiviziRecombinare.size()){
             // in indiviziRecombinare, pe prima pozitie e indicele individului, pe a doua e obiectul de tip individ
             auto cromozomParinte1 = indiviziRecombinare[i].second.getCromozom();
             auto cromozomParinte2 = indiviziRecombinare[i + 1].second.getCromozom();
@@ -331,6 +356,7 @@ vector<pair<int, Individ>> recombinare(vector<pair<int, Individ>> indiviziRecomb
             }
         }
         else {
+            // in cazul in care lungimea vectorului indiviziRecombinare e impara si ultimul nu mai are cu cine sa se recombine, il adaugam
             indiviziDupaRecombinare.emplace_back(i, indiviziRecombinare[i].second);
         }
     }
